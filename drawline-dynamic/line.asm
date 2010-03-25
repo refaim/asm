@@ -2,21 +2,14 @@
 .386
 locals
 
-ccall macro func, params
-    irp param, <params>
-        push param
-    endm
-    call func
-endm
+include common.inc
 
-delay_coef equ 7
-LLEN equ 120
-XC equ 160
-YC equ 100
+extrn get_display_mode: far, set_display_mode: far
 
-delay macro
+pause_coef equ 7
+pause macro
 local @@os, @@is
-    mov cx, delay_coef
+    mov cx, pause_coef
 @@os:
     push cx
     mov cx, 0
@@ -25,6 +18,10 @@ local @@os, @@is
     pop cx
     loop @@os
 endm
+
+LLEN equ 120
+XC equ 160
+YC equ 100
 
 draw macro coords
     ccall draw_line coords
@@ -43,21 +40,6 @@ data ends
 
 code segment para public 'code' use16
 assume cs: code, ds: data, ss: stk
-
-; out: ah -- chars in line, al -- display mode, bh -- current page number
-get_display_mode proc pascal
-    mov ah, 00Fh ; get mode
-    int 10h
-    ret
-get_display_mode endp
-
-set_display_mode proc pascal mode: byte
-uses ax
-    mov ah, 000h ; set mode
-    mov al, mode
-    int 10h
-    ret
-set_display_mode endp
 
 switch_page proc pascal number: byte
 uses ax
@@ -146,7 +128,7 @@ main proc
     xor bx, bx
 @@display:
     ccall switch_page, bx
-    delay
+    pause
     cmp bx, 7
     je short @@restart
     inc bx
