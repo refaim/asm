@@ -33,7 +33,7 @@ LIBNAMES = glib
 LIB_OBJS = $(foreach LIB, $(LIBNAMES), $(LIB).obj)
 LIB_MISC = $(foreach LIB, $(LIBNAMES), $(LIB).lst $(LIB).map)
 
-OBJS = $(APPS) $(APP_OBJS) $(APP_MISC) $(LIB_OBJSC) $(LIB_MISC)
+OBJS = $(APPS) $(APP_OBJS) $(APP_MISC) $(LIB_OBJS) $(LIB_MISC)
 
 all: $(APPS)
 
