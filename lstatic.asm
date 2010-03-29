@@ -29,14 +29,14 @@ main proc
     ccall get_point_offset_13h <60, 100>
     mov cx, 200 ; line length
 @@horizontal:
-    mov es:[si], byte ptr 04h ; color
+    mov es:[si], byte ptr 04h
     inc si
     loop @@horizontal
 
     ccall get_point_offset_13h <160, 25>
     mov cx, 150 ; line length
 @@vertical:
-    mov es:[si], byte ptr 04h ; color
+    mov es:[si], byte ptr 04h
     add si, 320
     loop @@vertical
 
