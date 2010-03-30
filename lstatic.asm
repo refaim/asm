@@ -4,8 +4,9 @@ locals
 
 include common.inc
 
+extrn wait_key_press
 extrn get_display_mode: far, set_display_mode: far
-extrn get_point_offset_13h: far
+extrn get_offset_by_point_13h: far
 
 stk segment stack use16
     db 256 dup (0)
@@ -26,14 +27,14 @@ main proc
     mov ax, 0A000h ; video memory address
     mov es, ax
 
-    ccall get_point_offset_13h <60, 100>
+    ccall get_offset_by_point_13h <60, 100>
     mov cx, 200 ; line length
 @@horizontal:
     mov es:[si], byte ptr 04h
     inc si
     loop @@horizontal
 
-    ccall get_point_offset_13h <160, 25>
+    ccall get_offset_by_point_13h <160, 25>
     mov cx, 150 ; line length
 @@vertical:
     mov es:[si], byte ptr 04h
@@ -41,8 +42,7 @@ main proc
     loop @@vertical
 
 @@exit:
-    mov ah, 007h ; pause
-    int 21h
+    call wait_key_press
     ccall set_display_mode, word ptr old_mode
     mov ax, 04C00h
     int 21h

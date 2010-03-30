@@ -1,49 +1,61 @@
 .PHONY: all clean
 
-DOSBOX_BIN = "G:\\games\\DOSBox-0.63\\dosbox.exe"
+DOSBOX_BIN = "G:\\home\\utils\\dosbox\\dosbox.exe"
 TASM_PATH = C:\\TASM\\BIN
 
 SRC_PATH = $(shell cd)
 SRC_DRIVE = $(firstword $(subst :, ,$(SRC_PATH)))
 TASM_DRIVE = $(firstword $(subst :, ,$(TASM_PATH)))
+OUTPUT_FILE = output
 
-OUT = output
-
-DOSBOX = $(DOSBOX_BIN) nul $(MOUNTS) -c$(1) $(PARAMS) $(SUFFIX)
-MOUNTS = -c "mount $(TASM_DRIVE) $(TASM_DRIVE):\" -c "mount $(SRC_DRIVE) $(SRC_DRIVE):\" -c "$(SRC_DRIVE):" -c "cd $(SRC_PATH)"
-PARAMS = -c exit -noconsole
-SUFFIX = && type $(OUT) && del $(OUT) stdout.txt 2>nul
+DOSBOX = $(DOSBOX_BIN) nul -noconsole $(MOUNTS) -c$(1) -c exit $(SUFFIX)
+MOUNTS =\
+-c "mount $(TASM_DRIVE) $(TASM_DRIVE):\"\
+-c "mount $(SRC_DRIVE) $(SRC_DRIVE):\"\
+-c "$(SRC_DRIVE):"\
+-c "cd $(SRC_PATH)"
+SUFFIX = && type $(OUTPUT_FILE) && del $(OUTPUT_FILE) stdout.txt stderr.txt 2>nul
 
 TFLAGS = /ml /t /w2
 define tasm
-	$(call DOSBOX, "$(TASM_PATH)\\tasm.exe $(TFLAGS) $^ > $(OUT)")
+	$(call DOSBOX, "$(TASM_PATH)\\tasm.exe $(TFLAGS) $$^ > $(OUTPUT_FILE)")
 endef
 
 LFLAGS = /C /d
 define tlink
-	$(call DOSBOX, "$(TASM_PATH)\\tlink.exe $(LFLAGS) $^ > $(OUT)")
+	$(call DOSBOX, "$(TASM_PATH)\\tlink.exe $(LFLAGS) $$^ > $(OUTPUT_FILE)")
 endef
 
-APPNAMES = lstatic ldynamic sapper
-APPS = $(foreach APP, $(APPNAMES), $(APP).exe)
-APP_OBJS = $(foreach APP, $(APPNAMES), $(APP).obj)
-APP_MISC = $(foreach APP, $(APPNAMES), $(APP).lst $(APP).map)
-
-LIBNAMES = glib
+COMMON_LIBNAMES = libvideo libmisc
+COMMON_LIB_OBJS = $(foreach LIB, $(COMMON_LIBNAMES), $(LIB).obj)
+LIBNAMES = $(COMMON_LIBNAMES) librand
 LIB_OBJS = $(foreach LIB, $(LIBNAMES), $(LIB).obj)
-LIB_MISC = $(foreach LIB, $(LIBNAMES), $(LIB).lst $(LIB).map)
 
-OBJS = $(APPS) $(APP_OBJS) $(APP_MISC) $(LIB_OBJS) $(LIB_MISC)
+APPNAMES = lstatic ldynamic sapper
+sapper_LIBS = librand.obj
+
+APPS = $(foreach APP, $(APPNAMES), $(APP).exe)
+APP_OBJS = $(foreach APP, $(APPNAMES), $(APP).obj $(APP).map)
+
+OBJS = $(APPS) $(APP_OBJS) $(LIB_OBJS)
+
+define exe_template
+$(1).exe: $(1).obj $(COMMON_LIB_OBJS) $$(value $(1)_LIBS)
+	@echo Linking $$@
+	@$(tlink)
+endef
+
+define obj_template                                   
+$(1).obj: $(1).asm
+	@echo Assembling $$@
+	@$(tasm)
+endef
 
 all: $(APPS)
 
 clean:
-	del /q $(OBJS) 2>nul
+	@echo Cleaning
+	@del /q $(OBJS) $(wildcard make*-?.bat) 2>nul
 
-%.exe: %.obj $(LIB_OBJS)
-	echo Linking $@
-	$(tlink)
-
-%.obj: %.asm
-	echo Assembling $@
-	$(tasm)
+$(foreach APP, $(APPNAMES), $(eval $(call exe_template, $(APP))))
+$(foreach APP, $(APPNAMES) $(LIBNAMES), $(eval $(call obj_template, $(APP))))
