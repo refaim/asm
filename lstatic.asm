@@ -4,7 +4,7 @@ locals
 
 include common.inc
 
-extrn wait_key_press
+extrn wait_key_press: far
 extrn get_display_mode: far, set_display_mode: far
 extrn get_offset_by_point_13h: far
 
@@ -43,7 +43,7 @@ main proc
 
 @@exit:
     call wait_key_press
-    ccall set_display_mode, word ptr old_mode
+    ccall set_display_mode, old_mode
     mov ax, 04C00h
     int 21h
 main endp

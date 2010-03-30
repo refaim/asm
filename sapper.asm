@@ -53,7 +53,7 @@ draw_rectangle proc pascal w: word, h: word, color: byte
 uses cx
     mov cx, h
 @@drawline:
-    ccall draw_horz_line, <w, word ptr color>
+    ccall draw_horz_line, <w, color>
     add si, screenWidth
     sub si, w
     loop @@drawline
@@ -81,16 +81,16 @@ draw_horz_line endp
 
 draw_player proc pascal
 uses ax, bx
-    ccall set_random_seed, <word ptr playerSeedXarg>
+    ccall set_random_seed, playerSeedXarg
     call get_random_point
     ccall get_point_by_offset_13h, <si>
     cmp ax, rightMaxPos
-	jle short @@check_height
-	mov ax, rightMaxPos
+    jle short @@check_height
+    mov ax, rightMaxPos
 @@check_height:
-	cmp bx, bottomMaxPos
-	jle short @@draw
-	mov bx, bottomMaxPos
+    cmp bx, bottomMaxPos
+    jle short @@draw
+    mov bx, bottomMaxPos
 @@draw:
     ccall get_offset_by_point_13h, <ax, bx>
     ccall draw_rectangle, <playerWidth, playerHeight, playerColor>
@@ -107,7 +107,7 @@ main proc
     mov es, ax
 
     call wait_key_press
-    ccall set_random_seed, <word ptr mineSeedXarg>
+    ccall set_random_seed, mineSeedXarg
     mov cx, minesCount
 @@mines:
     call get_random_point
@@ -118,11 +118,11 @@ main proc
     mov result_color, winColor
     call draw_player
     call wait_key_press
-    ccall fill_screen_13h, <word ptr result_color>
+    ccall fill_screen_13h, result_color
 
 @@exit:
     call wait_key_press
-    ccall set_display_mode, <word ptr old_mode>
+    ccall set_display_mode, old_mode
     mov ax, 04C00h
     int 21h
 main endp

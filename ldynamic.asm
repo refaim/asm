@@ -4,6 +4,7 @@ locals
 
 include common.inc
 
+extrn wait_key_press: far
 extrn get_display_mode: far, set_display_mode: far
 
 pause_coef equ 7
@@ -138,9 +139,8 @@ main proc
     jmp short @@display
 
 exit:
-    mov ah, 007h ; pause
-    int 21h
-    ccall set_display_mode, word ptr old_mode
+    call wait_key_press
+    ccall set_display_mode, old_mode
     mov ax, 04C00h
     int 21h
 main endp
